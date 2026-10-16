@@ -1,0 +1,57 @@
+#include "Application.h"
+#include <iostream>
+
+void Application::Init()
+{
+    InitWindow();
+    InitVulkan();
+}
+
+void Application::InitWindow()
+{
+    glfwInit();
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+    window = glfwCreateWindow(800, 600, "Vulkan", nullptr, nullptr);
+}
+
+void Application::InitVulkan()
+{
+    renderer = new Renderer();
+    renderer->CreateInstance();
+}
+
+void Application::createSurface()
+{
+    VkSurfaceKHR       _surface;
+    if (glfwCreateWindowSurface(*instance, window, nullptr, &_surface) != 0) {
+        throw std::runtime_error("failed to create window surface!");
+    }
+    surface = vk::raii::SurfaceKHR(instance, _surface);
+}
+
+void Application::Run()
+{
+    while (!glfwWindowShouldClose(window))
+    {
+        glfwPollEvents();
+    }
+}
+
+void Application::Destroy()
+{
+    DestroyVulkan();
+    DestroyWindow();
+}
+
+void Application::DestroyWindow()
+{
+    glfwDestroyWindow(window);
+    glfwTerminate();
+}
+
+void Application::DestroyVulkan()
+{
+}
