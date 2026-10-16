@@ -21,15 +21,9 @@ void Application::InitVulkan()
 {
     renderer = new Renderer();
     renderer->CreateInstance();
-}
-
-void Application::createSurface()
-{
-    VkSurfaceKHR       _surface;
-    if (glfwCreateWindowSurface(*instance, window, nullptr, &_surface) != 0) {
-        throw std::runtime_error("failed to create window surface!");
-    }
-    surface = vk::raii::SurfaceKHR(instance, _surface);
+    renderer->createSurface(window, &surface);
+    renderer->pickPhysicalDevice();
+    renderer->createLogicalDevice(&surface);
 }
 
 void Application::Run()
