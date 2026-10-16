@@ -23,7 +23,8 @@ void Application::InitVulkan()
     renderer->CreateInstance();
     renderer->createSurface(window, &surface);
     renderer->pickPhysicalDevice();
-    renderer->createLogicalDevice(&surface);
+    renderer->createLogicalDevice();
+    renderer->createSwapChain();
 }
 
 void Application::Run()
