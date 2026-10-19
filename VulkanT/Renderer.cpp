@@ -220,7 +220,8 @@ void Renderer::createSwapChain()
 
     std::vector<vk::SurfaceFormatKHR> availableFormats = physicalDevice.getSurfaceFormatsKHR(*surface);
     swapChainSurfaceFormat = chooseSwapSurfaceFormat(availableFormats);
-    uint32_t minImageCount = surfaceCapabilities.minImageCount;
+    minImageCount = surfaceCapabilities.minImageCount;
+    std::vector<vk::PresentModeKHR> availablePresentModes = physicalDevice.getSurfacePresentModesKHR(*surface);
     vk::SwapchainCreateInfoKHR swapChainCreateInfo{.surface          = *surface,
                                                .minImageCount    = minImageCount,
                                                .imageFormat      = swapChainSurfaceFormat.format,
@@ -233,7 +234,9 @@ void Renderer::createSwapChain()
                                                .compositeAlpha   = vk::CompositeAlphaFlagBitsKHR::eOpaque,
                                                .presentMode      = chooseSwapPresentMode(availablePresentModes),
                                                .clipped          = true};
-    };
+    swapChainCreateInfo.oldSwapchain = nullptr;
+    swapChain = vk::raii::SwapchainKHR(device, swapChainCreateInfo);
+    swapChainImages = swapChain.getImages();
 }
 
 uint32_t Renderer::chooseSwapMinImageCount(vk::SurfaceCapabilitiesKHR const& surfaceCapabilities)
@@ -246,9 +249,55 @@ uint32_t Renderer::chooseSwapMinImageCount(vk::SurfaceCapabilitiesKHR const& sur
     return minImageCount;
 }
 
-vk::raii::Instance& Renderer::GetInstance()
+void Renderer::createImageViews()
 {
-    return instance;
+    assert(swapChainImageViews.empty());
+
+    vk::ImageViewCreateInfo imageViewCreateInfo{ .viewType = vk::ImageViewType::e2D,
+                                                 .format = swapChainSurfaceFormat.format,
+                                                 .subresourceRange = { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } };
+    imageViewCreateInfo.components = {
+    vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity };
+    imageViewCreateInfo.subresourceRange = { .aspectMask = vk::ImageAspectFlagBits::eColor, .levelCount = 1, .layerCount = 1 };
+    for (auto& image : swapChainImages)
+    {
+        imageViewCreateInfo.image = image;
+        swapChainImageViews.emplace_back(device, imageViewCreateInfo);
+    }
+}
+
+void Renderer::createGraphicsPipeline()
+{
+    vk::raii::ShaderModule shaderModule = createShaderModule(readFile("shaders/slang.spv"));
+    vk::PipelineShaderStageCreateInfo vertShaderStageInfo{ .stage = vk::ShaderStageFlagBits::eVertex, .module = shaderModule,  .pName = "vertMain" };
+    vk::PipelineShaderStageCreateInfo fragShaderStageInfo{ .stage = vk::ShaderStageFlagBits::eFragment, .module = shaderModule, .pName = "fragMain" };
+    vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+
+    std::vector<vk::DynamicState> dynamicStates = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+    vk::PipelineDynamicStateCreateInfo dynamicState{ .dynamicStateCount = static_cast<uint32_t>(dynamicStates.size()), .pDynamicStates = dynamicStates.data() };
+    vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
+}
+
+std::vector<char> Renderer::readFile(const std::string& filename)
+{
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open()) {
+        throw std::runtime_error("failed to open file!");
+    }
+    std::vector<char> buffer(file.tellg());
+    file.seekg(0, std::ios::beg);
+    file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+    file.close();
+
+    return buffer;
+}
+
+vk::raii::ShaderModule Renderer::createShaderModule(const std::vector<char>& code) const
+{
+    vk::ShaderModuleCreateInfo createInfo{ .codeSize = code.size() * sizeof(char), .pCode = reinterpret_cast<const uint32_t*>(code.data()) };
+    vk::raii::ShaderModule shaderModule{ device, createInfo };
+    return shaderModule;
 }
 
 std::vector<char const*> Renderer::GetRequiredExtensions()

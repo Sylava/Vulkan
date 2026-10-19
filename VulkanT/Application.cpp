@@ -25,6 +25,8 @@ void Application::InitVulkan()
     renderer->pickPhysicalDevice();
     renderer->createLogicalDevice();
     renderer->createSwapChain();
+    renderer->createImageViews();
+    renderer->createGraphicsPipeline();
 }
 
 void Application::Run()

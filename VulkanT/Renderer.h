@@ -1,4 +1,5 @@
 #pragma once
+#include <fstream>
 #include "Dependencies.h"
 
 class Renderer
@@ -14,12 +15,14 @@ public:
 	vk::Extent2D chooseSwapExtent(vk::SurfaceCapabilitiesKHR const& capabilities);
 	void createSwapChain();
 	uint32_t chooseSwapMinImageCount(vk::SurfaceCapabilitiesKHR const& surfaceCapabilities);
+	void createImageViews();
+	void createGraphicsPipeline();
+	static std::vector<char> readFile(const std::string& filename);
+	[[nodiscard]] vk::raii::ShaderModule createShaderModule(const std::vector<char>& code) const;
 
-	vk::raii::Instance& GetInstance();
 	vk::raii::Instance instance = nullptr;
 	GLFWwindow* window = nullptr;
 	vk::raii::SurfaceKHR* surface;
-
 
 private:
 	std::vector<char const*> GetRequiredExtensions();
@@ -35,9 +38,9 @@ private:
 	vk::raii::Queue queue = nullptr;
 	vk::Extent2D swapChainExtent;
 	vk::SurfaceFormatKHR swapChainSurfaceFormat;
-	vk::PresentModeKHR availablePresentModes = physicalDevice.getSurfacePresentModesKHR(*surface);
-	vk::raii::SwapchainKHR swapChain;
+	vk::raii::SwapchainKHR swapChain = nullptr;
 	std::vector<vk::Image> swapChainImages;
+	std::vector<vk::raii::ImageView> swapChainImageViews;
 
 	static VKAPI_ATTR vk::Bool32 VKAPI_CALL DebugCallback(
 		vk::DebugUtilsMessageSeverityFlagBitsEXT,
