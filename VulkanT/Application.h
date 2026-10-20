@@ -22,5 +22,6 @@ private:
 	void DestroyWindow();
 	void DestroyVulkan();
 	void createSurface();
+	void mainLoop();
 };
 
