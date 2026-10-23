@@ -22,11 +22,12 @@ void Application::InitVulkan()
     renderer = new Renderer();
     renderer->CreateInstance();
     renderer->createSurface(window, &surface);
-    renderer->pickPhysicalDevice();
+    device = renderer->pickPhysicalDevice();
     renderer->createLogicalDevice();
     renderer->createSwapChain();
     renderer->createImageViews();
     renderer->createGraphicsPipeline();
+
     renderer->createCommandPool();
     renderer->createCommandBuffer();
     renderer->createSyncObjects();
@@ -37,8 +38,9 @@ void Application::Run()
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
-        //renderer->drawFrame();
+        renderer->drawFrame();
     }
+    device->waitIdle();
 }
 
 void Application::Destroy()

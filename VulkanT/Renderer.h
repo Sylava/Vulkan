@@ -2,12 +2,14 @@
 #include <fstream>
 #include "Dependencies.h"
 
+constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
 class Renderer
 {
 public:
 	void CreateInstance();
 	bool isDeviceSuitable(vk::raii::PhysicalDevice const& physicalDevice);
-	void pickPhysicalDevice();
+	vk::raii::Device* pickPhysicalDevice();
 	void createLogicalDevice();
 	void createSurface(GLFWwindow* win, vk::raii::SurfaceKHR* surface);
 	vk::SurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats);
@@ -32,7 +34,9 @@ public:
 		vk::PipelineStageFlags2 dst_stage_mask);
 	void createSyncObjects();
 	void drawFrame();
+	void createCommandBuffers();
 
+	
 	vk::raii::Instance instance = nullptr;
 	GLFWwindow* window = nullptr;
 	vk::raii::SurfaceKHR* surface;
@@ -54,10 +58,6 @@ private:
 	vk::raii::SwapchainKHR swapChain = nullptr;
 	std::vector<vk::Image> swapChainImages;
 	std::vector<vk::raii::ImageView> swapChainImageViews;
-	vk::raii::Semaphore presentCompleteSemaphore = nullptr;
-	vk::raii::Semaphore renderFinishedSemaphore = nullptr;
-	vk::raii::Fence     drawFence = nullptr;
-
 
 	// Fixed Functions
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
@@ -95,6 +95,13 @@ private:
 	vk::raii::CommandPool commandPool = nullptr;
 	vk::raii::CommandBuffer commandBuffer = nullptr;
 	uint32_t queueIndex = ~0;
+
+	std::vector<vk::raii::CommandBuffer> commandBuffers;
+	std::vector<vk::raii::Semaphore> presentCompleteSemaphores;
+	std::vector<vk::raii::Semaphore> renderFinishedSemaphores;
+	std::vector<vk::raii::Fence> inFlightFences;
+
+	uint32_t frameIndex = 0;
 
 
 	static VKAPI_ATTR vk::Bool32 VKAPI_CALL DebugCallback(

@@ -11,6 +11,7 @@ public:
 	GLFWwindow* window = nullptr;
 	Renderer* renderer;
 	vk::raii::SurfaceKHR surface = nullptr;
+	vk::raii::Device* device;
 
 	void Init();
 	void Run();
