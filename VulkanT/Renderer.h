@@ -33,7 +33,8 @@ public:
 		vk::AccessFlags2        src_access_mask,
 		vk::AccessFlags2        dst_access_mask,
 		vk::PipelineStageFlags2 src_stage_mask,
-		vk::PipelineStageFlags2 dst_stage_mask);
+		vk::PipelineStageFlags2 dst_stage_mask,
+		vk::ImageAspectFlags    image_aspect_flags);
 	void createSyncObjects();
 	void drawFrame();
 	void createCommandBuffers();
@@ -56,9 +57,12 @@ public:
 	vk::raii::CommandBuffer beginSingleTimeCommands();
 	void transitionImageLayout(vk::raii::CommandBuffer& commandBuffer, const vk::raii::Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 	void createTextureImageView();
-	vk::raii::ImageView createImageView(vk::Image const& image, vk::Format format);
+	vk::raii::ImageView createImageView(vk::Image const& image, vk::Format format, vk::ImageAspectFlags aspectFlags);
 	void createTextureSampler();
 	void copyBufferToImage(vk::raii::CommandBuffer& commandBuffer, const vk::raii::Buffer& buffer, vk::raii::Image& image, uint32_t width, uint32_t height);
+	void createDepthResources();
+	vk::Format findSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features);
+	vk::Format findDepthFormat();
 
 	
 	vk::raii::Instance instance = nullptr;
@@ -78,6 +82,15 @@ public:
 	vk::raii::DeviceMemory textureImageMemory = nullptr;
 	vk::raii::ImageView textureImageView = nullptr;
 	vk::raii::Sampler textureSampler = nullptr;
+	vk::raii::Image depthImage = nullptr;
+	vk::raii::DeviceMemory depthImageMemory = nullptr;
+	vk::raii::ImageView depthImageView = nullptr;
+	vk::PipelineDepthStencilStateCreateInfo depthStencil{
+	.depthTestEnable = vk::True,
+	.depthWriteEnable = vk::True,
+	.depthCompareOp = vk::CompareOp::eLess,
+	.depthBoundsTestEnable = vk::False,
+	.stencilTestEnable = vk::False };
 
 private:
 	std::vector<char const*> GetRequiredExtensions();

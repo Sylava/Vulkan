@@ -38,6 +38,7 @@ void Application::InitVulkan()
     renderer->createGraphicsPipeline();
 
     renderer->createCommandPool();
+    renderer->createDepthResources();
     renderer->createTextureImage();
     renderer->createTextureImageView();
     renderer->createTextureSampler();
