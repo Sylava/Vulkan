@@ -1,13 +1,15 @@
 #pragma once
 #include <fstream>
 #include "Dependencies.h"
+#include "vertex.h"
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
 
 class Renderer
 {
 public:
-	void CreateInstance();
+	void CreateInstance(bool* buffer);
 	bool isDeviceSuitable(vk::raii::PhysicalDevice const& physicalDevice);
 	vk::raii::Device* pickPhysicalDevice();
 	void createLogicalDevice();
@@ -35,11 +37,47 @@ public:
 	void createSyncObjects();
 	void drawFrame();
 	void createCommandBuffers();
+	void recreateSwapChain();
+	void cleanupSwapChain();
+	void cleanup();
+	void createVertexBuffer();
+	uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
+	std::pair<vk::raii::Buffer, vk::raii::DeviceMemory> createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties);
+	void copyBuffer(vk::raii::Buffer& srcBuffer, vk::raii::Buffer& dstBuffer, vk::DeviceSize size);
+	void createIndexBuffer();
+	void createDescriptorSetLayout();
+	void createUniformBuffers();
+	void updateUniformBuffer(uint32_t currentImage);
+	void createDescriptorPool();
+	void createDescriptorSets();
+	void createTextureImage();
+	std::pair<vk::raii::Image, vk::raii::DeviceMemory> createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties);
+	void endSingleTimeCommands(vk::raii::CommandBuffer&& commandBuffer);
+	vk::raii::CommandBuffer beginSingleTimeCommands();
+	void transitionImageLayout(vk::raii::CommandBuffer& commandBuffer, const vk::raii::Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
+	void createTextureImageView();
+	vk::raii::ImageView createImageView(vk::Image const& image, vk::Format format);
+	void createTextureSampler();
+	void copyBufferToImage(vk::raii::CommandBuffer& commandBuffer, const vk::raii::Buffer& buffer, vk::raii::Image& image, uint32_t width, uint32_t height);
 
 	
 	vk::raii::Instance instance = nullptr;
 	GLFWwindow* window = nullptr;
 	vk::raii::SurfaceKHR* surface;
+	bool* framebufferResized;
+	vk::raii::Buffer vertexBuffer = nullptr;
+	vk::raii::DeviceMemory vertexBufferMemory = nullptr;
+	vk::raii::Buffer indexBuffer = nullptr;
+	vk::raii::DeviceMemory indexBufferMemory = nullptr;
+	std::vector<vk::raii::Buffer> uniformBuffers;
+	std::vector<vk::raii::DeviceMemory> uniformBuffersMemory;
+	std::vector<void*> uniformBuffersMapped;
+	vk::raii::DescriptorPool descriptorPool = nullptr;
+	std::vector<vk::raii::DescriptorSet> descriptorSets;
+	vk::raii::Image textureImage = nullptr;
+	vk::raii::DeviceMemory textureImageMemory = nullptr;
+	vk::raii::ImageView textureImageView = nullptr;
+	vk::raii::Sampler textureSampler = nullptr;
 
 private:
 	std::vector<char const*> GetRequiredExtensions();
@@ -71,7 +109,7 @@ private:
 													.rasterizerDiscardEnable = vk::False,
 													.polygonMode = vk::PolygonMode::eFill,
 													.cullMode = vk::CullModeFlagBits::eBack,
-													.frontFace = vk::FrontFace::eClockwise,
+													.frontFace = vk::FrontFace::eCounterClockwise,
 													.depthBiasEnable = vk::False,
 													.lineWidth = 1.0f };
 	vk::PipelineMultisampleStateCreateInfo multisampling{ .rasterizationSamples = vk::SampleCountFlagBits::e1, .sampleShadingEnable = vk::False };
@@ -86,6 +124,7 @@ private:
 	.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA };
 	vk::PipelineColorBlendStateCreateInfo colorBlending{
 	.logicOpEnable = vk::False, .logicOp = vk::LogicOp::eCopy, .attachmentCount = 1, .pAttachments = &colorBlendAttachment };
+	vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
 	vk::raii::PipelineLayout pipelineLayout = nullptr;
 
 	// Conclusion

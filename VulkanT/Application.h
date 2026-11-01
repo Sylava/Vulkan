@@ -12,10 +12,12 @@ public:
 	Renderer* renderer;
 	vk::raii::SurfaceKHR surface = nullptr;
 	vk::raii::Device* device;
+	bool framebufferResized = false;
 
 	void Init();
 	void Run();
 	void Destroy();
+	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 
 private:
 	void InitWindow();
